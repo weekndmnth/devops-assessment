@@ -18,8 +18,9 @@ RUN addgroup -g 1001 appuser && \
 
 WORKDIR /app
 
-# Upgrade OS packages to patch vulnerabilities (e.g. zlib)
-RUN apk upgrade --no-cache
+# Upgrade OS packages and global npm to patch bundled vulnerabilities (e.g. tar, minimatch)
+RUN apk upgrade --no-cache && \
+    npm install -g npm@latest
 
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
