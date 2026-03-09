@@ -54,6 +54,7 @@ resource "aws_lb_listener" "http" {
 # NOTE: After terraform apply, you must add the DNS validation CNAME records
 #       to your domain registrar before the certificate becomes ISSUED and the
 #       HTTPS listener becomes fully functional.
+/*
 resource "aws_acm_certificate" "main" {
   domain_name       = var.domain_name
   validation_method = "DNS"
@@ -66,8 +67,10 @@ resource "aws_acm_certificate" "main" {
     Name = "${var.project_name}-cert"
   })
 }
+*/
 
 # ─── HTTPS Listener (port 443) ────────────────────────────────────────────────
+/*
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.main.arn
   port              = 443
@@ -84,3 +87,4 @@ resource "aws_lb_listener" "https" {
     Name = "${var.project_name}-https-listener"
   })
 }
+*/

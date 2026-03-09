@@ -141,8 +141,8 @@ terraform plan
 terraform apply
 ```
 
-**After apply — ACM Certificate:**
-Terraform will create the ACM certificate but it will remain in `PENDING_VALIDATION` state until you add the DNS CNAME records that AWS provides to your domain registrar. The HTTPS listener will not serve traffic until the certificate is `ISSUED`.
+**After apply — ACM Certificate (IMPORTANT):**
+The `aws_acm_certificate` and `https` listener are **commented out** in `alb.tf` by default. This is because `example.com` is a reserved domain. Re-enabling these on a dummy domain will cause Terraform to hang indefinitely during DNS validation. To enable HTTPS in production, provide a real domain you own and uncomment the resources in `alb.tf`.
 
 **Estimated cost:**
 - ECS Fargate (0.25 vCPU, 0.5GB): ~$0.015/hour
