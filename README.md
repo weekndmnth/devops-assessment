@@ -145,9 +145,12 @@ terraform apply -var="key_name=your-ec2-keypair-name"
 Terraform will create the ACM certificate but it will remain in `PENDING_VALIDATION` state until you add the DNS CNAME records that AWS provides to your domain registrar. The HTTPS listener will not serve traffic until the certificate is `ISSUED`.
 
 **Estimated cost:**
-- t3.micro: ~$0.0104/hour (~$7.50/month)
-- ALB: ~$0.008/hour + LCU charges
-- Free-tier eligible accounts can run this at minimal cost for the assessment period
+- t2.micro: **free-tier eligible** (750 hrs/month on new AWS accounts), otherwise ~$0.0116/hr
+- ALB: ~$0.008/hour + LCU charges (~$6/month minimum)
+- ACM certificate: free when attached to the ALB
+- VPC, subnets, IGW: free
+- EBS 20GB gp3: ~$1.60/month
+- **Run `terraform destroy` immediately after the assessment is reviewed to avoid ongoing charges**
 
 **To destroy all resources after the assessment:**
 ```bash
