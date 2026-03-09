@@ -17,7 +17,7 @@ resource "aws_lb_target_group" "app" {
   port        = 3000
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
-  target_type = "instance"
+  target_type = "ip"
 
   health_check {
     path                = "/health"
@@ -33,12 +33,6 @@ resource "aws_lb_target_group" "app" {
   })
 }
 
-# ─── Target Group Attachment ───────────────────────────────────────────────────
-resource "aws_lb_target_group_attachment" "app" {
-  target_group_arn = aws_lb_target_group.app.arn
-  target_id        = aws_instance.app.id
-  port             = 3000
-}
 
 # ─── HTTP Listener (port 80) ──────────────────────────────────────────────────
 resource "aws_lb_listener" "http" {

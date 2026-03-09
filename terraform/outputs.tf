@@ -3,14 +3,13 @@ output "alb_dns_name" {
   value       = aws_lb.main.dns_name
 }
 
-output "ec2_public_ip" {
-  description = "Public IP address of the EC2 application server"
-  value       = aws_instance.app.public_ip
+
+output "ecs_cluster_name" {
+  value = aws_ecs_cluster.main.name
 }
 
-output "ec2_instance_id" {
-  description = "Instance ID of the EC2 application server"
-  value       = aws_instance.app.id
+output "ecs_service_name" {
+  value = aws_ecs_service.app.name
 }
 
 output "target_group_arn" {

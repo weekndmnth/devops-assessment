@@ -121,7 +121,7 @@ The infrastructure is defined in the `terraform/` directory and covers:
 - VPC with 2 public subnets across `us-east-1a` and `us-east-1b`
 - Internet Gateway and public route table
 - ALB security group (80/443 open) and App security group (3000 from ALB only)
-- EC2 instance (AL2023, t3.micro) with Docker pre-installed via user_data
+- ECS Fargate Cluster (serverless compute)
 - Application Load Balancer with HTTP and HTTPS listeners
 - ACM SSL certificate (DNS-validated)
 
@@ -135,26 +135,26 @@ cd terraform
 terraform init
 
 # 3. Preview what will be created (no changes made yet — safe to run)
-terraform plan -var="key_name=your-ec2-keypair-name"
+terraform plan
 
 # 4. Apply the infrastructure (creates real AWS resources)
-terraform apply -var="key_name=your-ec2-keypair-name"
+terraform apply
 ```
 
 **After apply — ACM Certificate:**
 Terraform will create the ACM certificate but it will remain in `PENDING_VALIDATION` state until you add the DNS CNAME records that AWS provides to your domain registrar. The HTTPS listener will not serve traffic until the certificate is `ISSUED`.
 
 **Estimated cost:**
-- t2.micro: **free-tier eligible** (750 hrs/month on new AWS accounts), otherwise ~$0.0116/hr
+- ECS Fargate (0.25 vCPU, 0.5GB): ~$0.015/hour
 - ALB: ~$0.008/hour + LCU charges (~$6/month minimum)
 - ACM certificate: free when attached to the ALB
 - VPC, subnets, IGW: free
-- EBS 20GB gp3: ~$1.60/month
+- CloudWatch logs: free tier (5GB)
 - **Run `terraform destroy` immediately after the assessment is reviewed to avoid ongoing charges**
 
 **To destroy all resources after the assessment:**
 ```bash
-terraform destroy -var="key_name=your-ec2-keypair-name"
+terraform destroy
 ```
 
 ---
@@ -199,7 +199,7 @@ For the manual approval gate, go to **Settings** → **Environments** → create
 
 ## Key Technical Decisions
 
-- **EC2 over ECS:** ECS adds complexity (task definitions, clusters, service configuration) that isn't justified for a single-service assessment. EC2 with Docker installed via `user_data` achieves the same result with less configuration overhead and is easier to reason about during a review.
+- **ECS Fargate over EC2:** While EC2 is simpler for basic tasks, ECS Fargate with an ALB was chosen to specifically meet the **Zero-Downtime Deployment** requirement. Fargate handles the "rolling update" natively—spinning up new containers, verifying health checks, and draining old ones automatically. This represents a modern, serverless, and production-ready DevOps architectre.
 
 - **Public subnets without a NAT gateway:** A NAT Gateway costs ~$32/month fixed — more than the EC2 instance itself. For an assessment running staging infrastructure, this is not a sensible spend. In a real production setup with private subnets, a NAT Gateway would be necessary for outbound traffic from private instances.
 

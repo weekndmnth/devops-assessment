@@ -34,11 +34,6 @@ variable "instance_type" {
   default     = "t2.micro"
 }
 
-variable "key_name" {
-  description = "EC2 Key Pair name for SSH access to the application server"
-  type        = string
-}
-
 variable "docker_image" {
   description = "Docker image to pull and run on the EC2 instance"
   type        = string

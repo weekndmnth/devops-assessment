@@ -36,7 +36,7 @@ resource "aws_security_group" "alb" {
 # ─── App Security Group ───────────────────────────────────────────────────────
 resource "aws_security_group" "app" {
   name        = "${var.project_name}-app-sg"
-  description = "Allow port 3000 only from the ALB — never from the internet directly"
+  description = "Allow port 3000 only from the ALB - never from the internet directly"
   vpc_id      = aws_vpc.main.id
 
   ingress {

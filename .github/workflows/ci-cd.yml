@@ -114,16 +114,37 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-  deploy-approval:
-    name: Manual Production Deployment
-    needs: build-and-push
+  deploy-production:
+    name: Production Deployment
+    needs: security-scan
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: production
       url: https://credpal-api.example.com
     steps:
-      - name: Trigger Deployment
-        run: |
-          echo "🚀 Deploying to production after approval"
-          echo "Target image tags deployed: ${{ needs.build-and-push.outputs.image }}"
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: terraform/task-definition.json
+          container-name: app
+          image: ${{ secrets.DOCKERHUB_USERNAME }}/credpal-app:latest
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: credpal-assessment-service
+          cluster: credpal-assessment-cluster
+          wait-for-service-stability: true

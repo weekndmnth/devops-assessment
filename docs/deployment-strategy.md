@@ -60,14 +60,11 @@ This pauses the `deploy-approval` job and notifies configured reviewers via GitH
 
 ## 4. Rollback Strategy
 
-**Application rollback** is done by redeploying a previous Docker image tag. Every push to `main` produces a tag in the format `sha-<7-char-git-sha>`, so any prior version can be identified and redeployed:
+**Application rollback** is handled natively by ECS. If a deployment fails, the ECS Service is configured with a **Deployment Circuit Breaker** that automatically rolls back to the last stable Task Definition version.
 
-```bash
-# Re-run the pipeline with the previous commit's image tag
-docker pull youruser/credpal-app:sha-abc1234
-docker stop credpal-app && docker rm credpal-app
-docker run -d --name credpal-app --restart unless-stopped -p 3000:3000 youruser/credpal-app:sha-abc1234
-```
+To manually rollback to a specific prior version:
+1. Update the ECS Service to point to the previous stable Task Definition ARN.
+2. The ALB will automatically begin routing traffic to the reverted version as tasks become healthy.
 
 **Infrastructure rollback** is handled through Terraform state. If an `apply` introduced a breaking infrastructure change, revert the Terraform file changes in git and re-apply. Terraform will diff the current state against the reverted config and make the necessary corrections.
 
