@@ -1,1 +1,14 @@
-node_modules
+# Environment secrets — never commit real .env
+.env
+
+# Node.js
+node_modules/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# SSH keys / certificates
+*.pem
