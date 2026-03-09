@@ -18,8 +18,11 @@ RUN addgroup -g 1001 appuser && \
 
 WORKDIR /app
 
+# Upgrade OS packages to patch vulnerabilities (e.g. zlib)
+RUN apk upgrade --no-cache
+
 COPY package.json package-lock.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev --ignore-scripts
 
 COPY --from=builder /app/src ./src
 
