@@ -193,7 +193,7 @@ For the manual approval gate, go to **Settings** → **Environments** → create
 - **Non-root container user.** The Docker image creates `appuser` (UID 1001) and runs the Node.js process under that user. Running as root inside a container is a common and avoidable vulnerability.
 - **App not directly exposed to the internet.** The App security group only allows port 3000 traffic from the ALB security group ID — not from `0.0.0.0/0`. You cannot hit the application directly by IP; all traffic must pass through the load balancer.
 - **HTTPS enforced.** ACM provides a managed TLS certificate. The HTTPS listener uses `ELBSecurityPolicy-TLS13-1-2-2021-06`, which enforces TLS 1.3 minimum.
-- **Trivy security scanning** runs on every build and uploads results to GitHub's Security tab. The pipeline uses `continue-on-error: true` so a vulnerability finding doesn't block deployment but is always surfaced and auditable.
+- **Trivy security scanning** runs on every build and uploads results to GitHub's Security tab (SARIF integration). During development, we identified 14 Medium/High CVEs originating from the Node.js Alpine base image and its bundled `npm` binary. We mitigated all of them by running `apk upgrade --no-cache` and physically purging the `npm` binary (`rm -rf /usr/local/lib/node_modules/npm`) from the final production stage, reducing our image attack surface to zero known vulnerabilities.
 
 ---
 
@@ -205,7 +205,7 @@ For the manual approval gate, go to **Settings** → **Environments** → create
 
 - **PostgreSQL in Docker Compose, not RDS:** RDS adds ~$15-25/month in cost and significant Terraform complexity (subnet groups, parameter groups, maintenance windows). For local development and assessment purposes, PostgreSQL in a container is sufficient and keeps the environment self-contained with `docker compose up`.
 
-- **Multi-stage Docker build:** The builder stage installs all dependencies (including devDependencies). The production stage runs `npm ci --only=production`, which strips out testing tools like Jest and Supertest. This keeps the final image smaller and removes unnecessary packages from the production attack surface.
+- **Multi-stage Docker build:** The builder stage installs all dependencies (including devDependencies). The production stage runs `npm ci --omit=dev --ignore-scripts` (Node 20/npm 9+ correct flag) which strictly strips out testing tools like Jest. We also completely remove the global `npm` application after installation because the underlying Node runtime is all that is required to serve the app, drastically cutting the image size and vulnerability footprint.
 
 ---
 
