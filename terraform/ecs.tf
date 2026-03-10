@@ -34,6 +34,40 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# Grant the execution role permission to read the secret
+resource "aws_iam_role_policy" "ecs_execution_secrets" {
+  name = "${var.project_name}-ecs-execution-secrets"
+  role = aws_iam_role.ecs_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = [
+          aws_secretsmanager_secret.db_password.arn
+        ]
+      }
+    ]
+  })
+}
+
+# ─── Secrets Manager ─────────────────────────────────────────────────────────
+resource "aws_secretsmanager_secret" "db_password" {
+  name                    = "${var.project_name}-db-password-${var.environment}"
+  recovery_window_in_days = 0 # For assessment, allow immediate deletion
+
+  tags = local.common_tags
+}
+
+resource "aws_secretsmanager_secret_version" "db_password" {
+  secret_id     = aws_secretsmanager_secret.db_password.id
+  secret_string = "placeholder-do-not-use-in-production"
+}
+
 # Task Role (for the application's runtime permissions, if needed)
 resource "aws_iam_role" "ecs_task" {
   name = "${var.project_name}-ecs-task-role"
@@ -86,6 +120,13 @@ resource "aws_ecs_task_definition" "app" {
 
       environment = [
         { name = "NODE_ENV", value = "production" }
+      ]
+
+      secrets = [
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = aws_secretsmanager_secret.db_password.arn
+        }
       ]
 
       logConfiguration = {

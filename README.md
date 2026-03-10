@@ -117,10 +117,10 @@ To trigger the automated pipeline, you will need to:
 *   **Zero-CVE Image**: I reduced the vulnerability count from 14 to **0** by hardening the Alpine base and physically purging the `npm` binary from the final container.
 *   **Least Privilege IAM**: The deployment user is restricted to managing only the specific resources in this project.
 *   **Secrets Strategy**: 
-    *   *Current*: GitHub Secrets handle deployment, and `.env` handles the local dev-prod parity.
-    *   *Enterprise Upgrade (AWS Secrets Manager)*: For high-compliance environments, I recommend using **AWS Secrets Manager**. 
-        *   **Implementation**: Instead of passing `DB_PASSWORD` as a plain environment variable, we would use the ECS `secrets` parameter in the task definition. 
-        *   **Benefit**: This maps the ARN of the secret directly to an environment variable inside the container at runtime, meaning the password is never stored in CI/CD or log files.
+    *   **AWS Secrets Manager (Implemented)**: I’ve moved the `DB_PASSWORD` from plain environment variables to AWS Secrets Manager. 
+        *   **Implementation**: Terraform creates the secret and grants the ECS Execution Role permission to read it (`secretsmanager:GetSecretValue`).
+        *   **Benefit**: The password is never stored in CI/CD logs or the Task Definition JSON. It is injected directly into the container's environment by the ECS agent at runtime.
+    *   **GitHub Secrets**: Still used for deployment-time credentials (AWS Keys, Docker tokens).
 
 ---
 
