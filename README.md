@@ -13,7 +13,7 @@ The goal here was **Zero-Downtime**. By moving from a standalone instance to a F
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 The infrastructure follows the **Principle of Least Privilege** and **High Availability**.
 
@@ -44,7 +44,7 @@ The infrastructure follows the **Principle of Least Privilege** and **High Avail
 
 ---
 
-## 🚀 Running Locally
+## Running Locally
 
 I've kept the local environment identical to the logic in production using Docker Compose.
 
@@ -67,7 +67,7 @@ The app is live at **http://localhost:3000**. It waits gracefully for the Postgr
 
 ---
 
-## 🧪 CI/CD & Testing
+## CI/CD and Testing
 
 The pipeline in `.github/workflows/ci-cd.yml` is the heart of the project.
 
@@ -85,7 +85,7 @@ The pipeline in `.github/workflows/ci-cd.yml` is the heart of the project.
 
 ---
 
-## 🛡 Security & Decisions
+## Security & Decisions
 
 This is where I spent the most time refining the "production" feel:
 
@@ -97,7 +97,7 @@ This is where I spent the most time refining the "production" feel:
 
 ---
 
-## 🛣 Future Roadmap
+## Future Roadmap
 
 If this were a multi-year project, my next steps would be:
 1. **Private Subnets & NAT Gateway**: Moving the Fargate tasks into private subnets for true network isolation.
@@ -112,4 +112,4 @@ If this were a multi-year project, my next steps would be:
 **Teniola Ayedun**  
 *DevOps Engineer Candidate*
 
-This project was a fun deep-dive into balancing cost (Fargate) with robustness (rolling updates). I intentionally chose Fargate over EC2 because modern DevOps is moving toward "NoOps" serverless models where we focus on the code, not the servers. I hope you enjoy reviewing it as much as I enjoyed building it!
+This project was a fun deep-dive into balancing cost with robustness. I intentionally chose Fargate over EC2 because modern DevOps is moving toward "NoOps" serverless models where we focus on the code, not the servers. I hope you enjoy reviewing it as much as I enjoyed building it.
