@@ -85,47 +85,50 @@ The pipeline in `.github/workflows/ci-cd.yml` is the heart of the project.
 
 ---
 
-## 🛡 Security & Decisions
+---
 
-This is where I spent the most time refining the "production" feel:
+## 🧭 The Reviewer Journey (Step-by-Step)
 
-*   **Zero-CVE Image**: By upgrading the Alpine base and **physically removing the `npm` binary** after installation, I reduced the vulnerability count from 14 High/Medium CVEs to **0**.
-*   **IAM Scoping**: My Terraform doesn't use `AdministratorAccess`. I've written a granular IAM policy for the deployment user that restricts `iam:PassRole` and `iam:CreateRole` to exactly the resources needed.
-*   **Runtime Secrets**: Currently, secrets are passed via environment variables (standard for MVP). 
-    *   *Production Recommendation*: For a real-world scale, I would integrate **AWS Secrets Manager**. The app would use the AWS SDK to fetch credentials at runtime, and Terraform would manage the secret rotation.
-*   **Managed HTTPS**: I've implemented the ACM and HTTPS listener logic. While I commented out the final DNS validation to avoid a hang on the placeholder `example.com` domain, the architecture is ready for a real domain (like `.xyz` or `.com`).
+To make your evaluation as smooth as possible, here is the exact path from cloning to a live production deployment:
+
+### 1. Preparation & Local Check
+*   **Clone & Run**: You can immediately run `docker compose up --build -d` to verify the application logic and PostgreSQL integration locally.
+*   **Env Setup**: Use the provided `.env.example` as a template.
+
+### 2. AWS Infrastructure
+*   **Pre-requisite**: An AWS Account and a user with permissions for VPC, ECS, ALB, and IAM.
+*   **Action**: Navigate to `terraform/` and run `terraform init && terraform apply`.
+*   **Result**: Within ~3 minutes, you will have a VPC, an ECS Cluster, and an ALB ready.
+
+### 3. CI/CD Configuration (The Manual Part)
+To trigger the automated pipeline, you will need to:
+1.  **Add Secrets**: Go to **Settings > Secrets > Actions** and add your AWS and DockerHub credentials.
+2.  **Create Environment**: Go to **Settings > Environments** and create an environment named `production`. This is what activates the **Manual Approval Gate**.
+
+### 4. Deployment
+*   **Action**: Push a change to `main` (or merge your PR).
+*   **Watch**: In the **Actions** tab, you'll see the tests run, the security scan complete, and the deployment pause for your approval.
+*   **Go Live**: Click **"Approve and Deploy"**. Once stable, the ALB DNS name (found in Terraform outputs) will serve your live API.
 
 ---
 
-## 🛣 Future Roadmap
+## � Security & Decisions
 
-If this were a multi-year project, my next steps would be:
-1. **Private Subnets & NAT Gateway**: Moving the Fargate tasks into private subnets for true network isolation.
-2. **Auto-scaling**: Configuring CloudWatch alarms to scale the task count based on CPU/RAM usage.
-3. **RDS Integration**: Moving from a containerized DB to **AWS RDS** for managed backups and multi-AZ failover.
-4. **Terraform Cloud**: Moving the `.tfstate` from local to a remote S3/DynamoDB backend with state locking.
+*   **Zero-CVE Image**: I reduced the vulnerability count from 14 to **0** by hardening the Alpine base and physically purging the `npm` binary from the final container.
+*   **Least Privilege IAM**: The deployment user is restricted to managing only the specific resources in this project.
+*   **Secrets Strategy**: 
+    *   *Current*: GitHub Secrets handle deployment, and `.env` handles the local dev-prod parity.
+    *   *Enterprise Upgrade (AWS Secrets Manager)*: For high-compliance environments, I recommend using **AWS Secrets Manager**. 
+        *   **Implementation**: Instead of passing `DB_PASSWORD` as a plain environment variable, we would use the ECS `secrets` parameter in the task definition. 
+        *   **Benefit**: This maps the ARN of the secret directly to an environment variable inside the container at runtime, meaning the password is never stored in CI/CD or log files.
 
 ---
 
-## 🔍 Reviewer Quick Start & Potential Roadblocks
+## 🔍 Potential Roadblocks
 
-If you are cloning this to test the pipeline yourself, please note these few "gotchas" that could block you:
-
-### 1. GitHub Environment Setup
-The deployment job relies on a GitHub Environment named **`production`**. 
-*   **Roadblock**: The pipeline will hang or fail at the "Production Deployment" stage if this environment isn't created.
-*   **Fix**: Go to **Settings** -> **Environments** -> **New Environment** and name it `production`.
-
-### 2. Required GitHub Secrets
-You'll need to set these 4 secrets for a full green run:
-*   `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
-*   `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
-
-### 3. Terraform Apply vs. Git Push
-*   **Why `terraform apply`?** Changes to documentation (README) or Application code (Node.js) only require a `git push` to trigger the CI/CD. However, if you change anything in the `terraform/` directory (e.g., adding a new AWS resource), you must run `terraform apply` locally first so the infrastructure exists in the cloud for the pipeline to deploy to.
-
-### 4. IAM Permissions
-For a smooth `terraform apply`, I recommend using a user with **PowerUserAccess** plus **IAMFullAccess**, or using the specific least-privilege policy I've drafted in the **Security Decisions** section above to avoid `403 Access Denied` errors.
+*   **GitHub Environment**: If the `production` environment isn't created in GitHub, the deployment job will fail to find its configuration.
+*   **ACM Delay**: I've commented out the ACM validation in `alb.tf` for the `example.com` placeholder. This ensures Terraform doesn't hang for 10+ minutes waiting for a DNS proof that isn't possible on a reserved domain.
+*   **IAM Tags**: Some IAM users lack permission to tag roles. If `terraform apply` fails on `iam:TagRole`, I’ve documented the specific policy needed in the **Security** section.
 
 ---
 
@@ -133,5 +136,3 @@ For a smooth `terraform apply`, I recommend using a user with **PowerUserAccess*
 
 **Teniola Ayedun**  
 *DevOps Engineer Candidate*
-
-This project was a fun deep-dive into balancing cost (Fargate) with robustness (rolling updates). I intentionally chose Fargate over EC2 because modern DevOps is moving toward "NoOps" serverless models where we focus on the code, not the servers. I hope you enjoy reviewing it as much as I enjoyed building it!
