@@ -32,6 +32,7 @@ The infrastructure follows the **Principle of Least Privilege** and **High Avail
                            │                │                     │
                            │   ┌────────────▼─────────────┐      │
                            │   │  ECS Fargate (Serverless) │      │
+                           │   │ [us-east-1a] [us-east-1b]│      │
                            │   │  2 Tasks (High Avail.)    │      │
                            │   └────────────┬─────────────┘      │
                            │                │                     │
@@ -85,6 +86,25 @@ The pipeline in `.github/workflows/ci-cd.yml` is the heart of the project.
 
 ---
 
+## Accessing the Application
+
+Once the infrastructure is provisioned, you can retrieve the public entry point from Terraform outputs.
+
+### Retrieve the DNS Name
+Run the following command in the `terraform/` directory:
+```bash
+terraform output alb_dns_name
+```
+
+### API Endpoints
+| Method | Endpoint | Description | Example curl |
+|---|---|---|---|
+| GET | /health | Liveness check | `curl http://<alb-dns>/health` |
+| GET | /status | Service metadata | `curl http://<alb-dns>/status` |
+| POST | /process | Echo input data | `curl -X POST -H "Content-Type: application/json" -d '{"data":"hello"}' http://<alb-dns>/process` |
+
+Note: The ALB automatically redirects port 80 (HTTP) traffic to port 443 (HTTPS) to ensure all communications are encrypted.
+
 ---
 
 ## Proposed Review Guidelines
@@ -115,19 +135,20 @@ To trigger the automated pipeline, you will need to:
 ## Security & Decisions
 
 *   **Zero-CVE Image**: I reduced the vulnerability count from 14 to **0** by hardening the Alpine base and physically purging the `npm` binary from the final container.
+*   **Non-root User**: The container runs as a non-root user (appuser, UID 1001) to prevent container escape privilege escalation.
 *   **Least Privilege IAM**: The deployment user is restricted to managing only the specific resources in this project.
 *   **Secrets Strategy**: 
     *   **AWS Secrets Manager (Implemented)**: I’ve moved the `DB_PASSWORD` from plain environment variables to AWS Secrets Manager. 
         *   **Implementation**: Terraform creates the secret and grants the ECS Execution Role permission to read it (`secretsmanager:GetSecretValue`).
         *   **Benefit**: The password is never stored in CI/CD logs or the Task Definition JSON. It is injected directly into the container's environment by the ECS agent at runtime.
     *   **GitHub Secrets**: Still used for deployment-time credentials (AWS Keys, Docker tokens).
+*   **ACM SSL**: The ACM certificate resource is implemented in Terraform. It requires DNS validation after running terraform apply. The ALB is configured with a port 80 listener that automatically redirects all traffic to HTTPS, and a port 443 listener for secure encrypted communication.
 
 ---
 
 ## Potential Roadblocks
 
 *   **GitHub Environment**: If the `production` environment isn't created in GitHub, the deployment job will fail to find its configuration.
-*   **ACM Delay**: I've commented out the ACM validation in `alb.tf` for the `example.com` placeholder. This ensures Terraform doesn't hang for 10+ minutes waiting for a DNS proof that isn't possible on a reserved domain.
 *   **IAM Tags**: Some IAM users lack permission to tag roles. If `terraform apply` fails on `iam:TagRole`, I’ve documented the specific policy needed in the **Security** section.
 
 ---
