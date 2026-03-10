@@ -107,6 +107,28 @@ If this were a multi-year project, my next steps would be:
 
 ---
 
+## 🔍 Reviewer Quick Start & Potential Roadblocks
+
+If you are cloning this to test the pipeline yourself, please note these few "gotchas" that could block you:
+
+### 1. GitHub Environment Setup
+The deployment job relies on a GitHub Environment named **`production`**. 
+*   **Roadblock**: The pipeline will hang or fail at the "Production Deployment" stage if this environment isn't created.
+*   **Fix**: Go to **Settings** -> **Environments** -> **New Environment** and name it `production`.
+
+### 2. Required GitHub Secrets
+You'll need to set these 4 secrets for a full green run:
+*   `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
+*   `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+
+### 3. Terraform Apply vs. Git Push
+*   **Why `terraform apply`?** Changes to documentation (README) or Application code (Node.js) only require a `git push` to trigger the CI/CD. However, if you change anything in the `terraform/` directory (e.g., adding a new AWS resource), you must run `terraform apply` locally first so the infrastructure exists in the cloud for the pipeline to deploy to.
+
+### 4. IAM Permissions
+For a smooth `terraform apply`, I recommend using a user with **PowerUserAccess** plus **IAMFullAccess**, or using the specific least-privilege policy I've drafted in the **Security Decisions** section above to avoid `403 Access Denied` errors.
+
+---
+
 ## ✍️ Author
 
 **Teniola Ayedun**  
