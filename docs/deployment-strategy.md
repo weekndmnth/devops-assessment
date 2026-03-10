@@ -100,4 +100,4 @@ feature branch
  Production deployment
 ```
 
-Every change goes through automated testing and a security scan before a human ever approves the production release. This ensures that production deployments are deliberate, auditable, and reversible.
+Every change goes through automated testing and a security scan before a reviewer ever approves the production release. This ensures that production deployments are deliberate, auditable, and reversible.
