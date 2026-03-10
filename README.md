@@ -13,7 +13,7 @@ The goal here was **Zero-Downtime**. By moving from a standalone instance to a F
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 The infrastructure follows the **Principle of Least Privilege** and **High Availability**.
 
@@ -44,7 +44,7 @@ The infrastructure follows the **Principle of Least Privilege** and **High Avail
 
 ---
 
-## 🚀 Running Locally
+## Running Locally
 
 I've kept the local environment identical to the logic in production using Docker Compose.
 
@@ -67,7 +67,7 @@ The app is live at **http://localhost:3000**. It waits gracefully for the Postgr
 
 ---
 
-## 🧪 CI/CD & Testing
+## CI/CD & Testing
 
 The pipeline in `.github/workflows/ci-cd.yml` is the heart of the project.
 
@@ -87,7 +87,7 @@ The pipeline in `.github/workflows/ci-cd.yml` is the heart of the project.
 
 ---
 
-## 🧭 The Reviewer Journey (Step-by-Step)
+## Proposed Review Guidelines
 
 To make your evaluation as smooth as possible, here is the exact path from cloning to a live production deployment:
 
@@ -112,7 +112,7 @@ To trigger the automated pipeline, you will need to:
 
 ---
 
-## � Security & Decisions
+## Security & Decisions
 
 *   **Zero-CVE Image**: I reduced the vulnerability count from 14 to **0** by hardening the Alpine base and physically purging the `npm` binary from the final container.
 *   **Least Privilege IAM**: The deployment user is restricted to managing only the specific resources in this project.
@@ -124,7 +124,7 @@ To trigger the automated pipeline, you will need to:
 
 ---
 
-## 🔍 Potential Roadblocks
+## Potential Roadblocks
 
 *   **GitHub Environment**: If the `production` environment isn't created in GitHub, the deployment job will fail to find its configuration.
 *   **ACM Delay**: I've commented out the ACM validation in `alb.tf` for the `example.com` placeholder. This ensures Terraform doesn't hang for 10+ minutes waiting for a DNS proof that isn't possible on a reserved domain.
@@ -132,7 +132,7 @@ To trigger the automated pipeline, you will need to:
 
 ---
 
-## ✍️ Author
+## Author
 
 **Teniola Ayedun**  
 *DevOps Engineer Candidate*
